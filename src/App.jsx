@@ -50,11 +50,7 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   const [mistakeCount, setMistakeCount] = useState(0);
   const [currentNumber, setCurrentNumber] = useState(generateRandomNumber());
   const [isWrongAnswer, setIsWrongAnswer] = useState(false);
-  const [startTime, setStartTime] = useState(Date.now());
-
-  useEffect(() => {
-    setStartTime(Date.now());
-  }, [questionNumber]);
+  const [startTime] = useState(Date.now());
 
   const handleAnswer = (answer) => {
     const lowerTen = Math.floor(currentNumber / 10) * 10;
@@ -67,6 +63,7 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
       setMistakeCount((prev) => prev + 1);
       setIsWrongAnswer(true);
       setTimeout(() => setIsWrongAnswer(false), 2000);
+      return;
     }
     nextQuestion();
   };
@@ -75,7 +72,7 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
     if (questionNumber === 25) {
       const endTime = Date.now();
       const elapsedTime = (endTime - startTime) / 1000;
-      updateHighScore({ score: correctCount, time: elapsedTime, totalRounds: 25, totalMistakes: mistakeCount });
+      updateHighScore({ score: correctCount + 1, time: elapsedTime, totalRounds: 25, totalMistakes: mistakeCount });
       onGameOver(false);
     } else {
       setQuestionNumber((prev) => prev + 1);
