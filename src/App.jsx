@@ -13,8 +13,14 @@ const App = () => {
   const [showGame, setShowGame] = useState(true);
 
   const updateHighScore = (newHighScore) => {
-    setHighScore(newHighScore);
-    localStorage.setItem("highScoreTens", JSON.stringify(newHighScore));
+    if (newHighScore.score > highScore.score || (newHighScore.score === highScore.score && newHighScore.time < highScore.time)) {
+      const playerName = prompt("Neuer Highscore! Bitte Namen eingeben:");
+      if (playerName) {
+        newHighScore.name = playerName;
+        setHighScore(newHighScore);
+        localStorage.setItem("highScoreTens", JSON.stringify(newHighScore));
+      }
+    }
   };
 
   const resetHighScore = () => {
@@ -27,7 +33,7 @@ const App = () => {
     <div style={styles.container}>
       <h1 style={styles.title}>Welcher Zehner liegt näher?</h1>
       {showGame ? (
-        <Game highScore={highScore} updateHighScore={updateHighScore} onGameOver={setShowGame} />
+        <Game highScore={highScore} updateHighScore={updateHighScore} onGameOver={() => setShowGame(false)} />
       ) : (
         <Result highScore={highScore} onRestart={() => setShowGame(true)} onResetHighScore={resetHighScore} />
       )}
@@ -43,6 +49,11 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   const [totalRounds, setTotalRounds] = useState(0);
   const [currentNumber, setCurrentNumber] = useState(generateRandomNumber());
   const [isWrongAnswer, setIsWrongAnswer] = useState(false);
+  const [startTime, setStartTime] = useState(Date.now());
+
+  useEffect(() => {
+    setStartTime(Date.now());
+  }, [questionNumber]);
 
   const handleAnswer = (answer) => {
     const lowerTen = Math.floor(currentNumber / 10) * 10;
@@ -62,7 +73,9 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   const nextQuestion = () => {
     setTotalRounds((prev) => prev + 1);
     if (questionNumber === 25) {
-      updateHighScore({ ...highScore, score: correctCount, totalRounds, totalMistakes: mistakeCount });
+      const endTime = Date.now();
+      const elapsedTime = (endTime - startTime) / 1000;
+      updateHighScore({ score: correctCount, time: elapsedTime, totalRounds, totalMistakes: mistakeCount });
       onGameOver(false);
     } else {
       setQuestionNumber((prev) => prev + 1);
@@ -74,7 +87,7 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   const upperTen = lowerTen + 10;
 
   return (
-    <div style={{ ...styles.gameContainer, backgroundColor: isWrongAnswer ? "#FFCCCC" : "white" }}>
+    <div style={{ ...styles.gameContainer, backgroundColor: isWrongAnswer ? "#FFCCCC" : "#FFFFFF", color: "#000000" }}>
       <h2 style={styles.subTitle}>Frage {questionNumber}/25</h2>
       <h3 style={styles.question}>Welche Zehnerzahl liegt näher an {currentNumber}?</h3>
       <div style={styles.buttonContainer}>
@@ -85,27 +98,8 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   );
 };
 
-const Result = ({ highScore, onRestart, onResetHighScore }) => {
-  return (
-    <div>
-      <h2 style={styles.subTitle}>Spiel beendet!</h2>
-      <h3 style={styles.question}>Ergebnisse</h3>
-      <p style={styles.resultText}>
-        Richtige Antworten: {highScore.score} <br />
-        Fehler: {highScore.totalMistakes} <br />
-        Gespielte Runden: {highScore.totalRounds} <br />
-        Highscore: {highScore.name || "—"} ({highScore.time === Infinity ? "—" : highScore.time.toFixed(2) + " Sekunden"})
-      </p>
-      <div style={styles.buttonContainer}>
-        <button style={styles.button} onClick={onRestart}>Neues Spiel starten</button>
-        <button style={styles.resetButton} onClick={onResetHighScore}>Highscore zurücksetzen</button>
-      </div>
-    </div>
-  );
-};
-
 const styles = {
-  container: { textAlign: "center", padding: "20px", fontFamily: "Arial, sans-serif" },
+  container: { textAlign: "center", padding: "20px", fontFamily: "Arial, sans-serif", backgroundColor: "#FFFFFF", color: "#000000" },
   title: { fontSize: "22px", marginBottom: "20px" },
   subTitle: { fontSize: "18px", marginBottom: "10px" },
   question: { fontSize: "16px", marginBottom: "20px" },
