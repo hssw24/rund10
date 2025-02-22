@@ -11,6 +11,7 @@ const App = () => {
     }
   );
   const [showGame, setShowGame] = useState(true);
+  const [lastResult, setLastResult] = useState(null);
 
   const updateHighScore = (newHighScore) => {
     if (newHighScore.score > highScore.score || (newHighScore.score === highScore.score && newHighScore.time < highScore.time)) {
@@ -21,6 +22,7 @@ const App = () => {
         localStorage.setItem("highScoreTens", JSON.stringify(newHighScore));
       }
     }
+    setLastResult(newHighScore);
   };
 
   const resetHighScore = () => {
@@ -35,7 +37,7 @@ const App = () => {
       {showGame ? (
         <Game highScore={highScore} updateHighScore={updateHighScore} onGameOver={() => setShowGame(false)} />
       ) : (
-        <Result highScore={highScore} onRestart={() => setShowGame(true)} onResetHighScore={resetHighScore} />
+        <Result highScore={highScore} lastResult={lastResult} onRestart={() => setShowGame(true)} onResetHighScore={resetHighScore} />
       )}
     </div>
   );
@@ -46,7 +48,6 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   const [questionNumber, setQuestionNumber] = useState(1);
   const [correctCount, setCorrectCount] = useState(0);
   const [mistakeCount, setMistakeCount] = useState(0);
-  const [totalRounds, setTotalRounds] = useState(0);
   const [currentNumber, setCurrentNumber] = useState(generateRandomNumber());
   const [isWrongAnswer, setIsWrongAnswer] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
@@ -71,11 +72,10 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   };
 
   const nextQuestion = () => {
-    setTotalRounds((prev) => prev + 1);
     if (questionNumber === 25) {
       const endTime = Date.now();
       const elapsedTime = (endTime - startTime) / 1000;
-      updateHighScore({ score: correctCount, time: elapsedTime, totalRounds, totalMistakes: mistakeCount });
+      updateHighScore({ score: correctCount, time: elapsedTime, totalRounds: 25, totalMistakes: mistakeCount });
       onGameOver(false);
     } else {
       setQuestionNumber((prev) => prev + 1);
@@ -98,6 +98,18 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   );
 };
 
+const Result = ({ highScore, lastResult, onRestart, onResetHighScore }) => (
+  <div style={styles.resultContainer}>
+    <h2>Spiel beendet!</h2>
+    <p>Richtige Antworten: {lastResult?.score || 0}</p>
+    <p>Fehlversuche: {lastResult?.totalMistakes || 0}</p>
+    <p>Benötigte Zeit: {lastResult?.time.toFixed(2)} Sekunden</p>
+    <p>Gesamt gespielte Runden: {lastResult?.totalRounds || 0}</p>
+    <button style={styles.button} onClick={onRestart}>Neues Spiel</button>
+    <button style={styles.resetButton} onClick={onResetHighScore}>Highscore zurücksetzen</button>
+  </div>
+);
+
 const styles = {
   container: { textAlign: "center", padding: "20px", fontFamily: "Arial, sans-serif", backgroundColor: "#FFFFFF", color: "#000000" },
   title: { fontSize: "22px", marginBottom: "20px" },
@@ -107,7 +119,7 @@ const styles = {
   buttonContainer: { display: "flex", justifyContent: "center", gap: "8px", flexWrap: "wrap" },
   button: { padding: "12px 15px", fontSize: "14px", backgroundColor: "#007BFF", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", minWidth: "90px" },
   resetButton: { padding: "12px 15px", fontSize: "14px", backgroundColor: "#FF5733", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", minWidth: "90px" },
-  resultText: { fontSize: "14px", marginBottom: "20px" },
+  resultContainer: { textAlign: "center", padding: "20px", backgroundColor: "#F8F9FA", borderRadius: "8px" },
 };
 
 export default App;
