@@ -43,6 +43,39 @@ const App = () => {
   );
 };
 
+const Game = ({ highScore, updateHighScore, onGameOver }) => {
+  const [number, setNumber] = useState(generateRandomNumber());
+  const [score, setScore] = useState(0);
+  const [mistakes, setMistakes] = useState(0);
+  const [startTime, setStartTime] = useState(Date.now());
+
+  const handleChoice = (choice) => {
+    const correctChoice = number % 10 < 5 ? Math.floor(number / 10) * 10 : Math.ceil(number / 10) * 10;
+    if (choice === correctChoice) {
+      setScore(score + 1);
+    } else {
+      setMistakes(mistakes + 1);
+    }
+    if (score + mistakes + 1 === 25) {
+      const timeTaken = (Date.now() - startTime) / 1000;
+      updateHighScore({ score, totalMistakes: mistakes, time: timeTaken, totalRounds: 25 });
+      onGameOver();
+    } else {
+      setNumber(generateRandomNumber());
+    }
+  };
+
+  return (
+    <div>
+      <p>Zahl: {number}</p>
+      <button onClick={() => handleChoice(Math.floor(number / 10) * 10)}> {Math.floor(number / 10) * 10} </button>
+      <button onClick={() => handleChoice(Math.ceil(number / 10) * 10)}> {Math.ceil(number / 10) * 10} </button>
+    </div>
+  );
+};
+
+const generateRandomNumber = () => Math.floor(Math.random() * 1000);
+
 const Result = ({ highScore, lastResult, onRestart, onResetHighScore }) => (
   <div style={styles.resultContainer}>
     <h2>Spiel beendet!</h2>
