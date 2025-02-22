@@ -27,7 +27,7 @@ const App = () => {
     <div style={styles.container}>
       <h1 style={styles.title}>Welcher Zehner liegt näher?</h1>
       {showGame ? (
-        <Game highScore={highScore} updateHighScore={updateHighScore} onGameOver={() => setShowGame(false)} />
+        <Game highScore={highScore} updateHighScore={updateHighScore} onGameOver={setShowGame} />
       ) : (
         <Result highScore={highScore} onRestart={() => setShowGame(true)} onResetHighScore={resetHighScore} />
       )}
@@ -40,6 +40,7 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
   const [questionNumber, setQuestionNumber] = useState(1);
   const [correctCount, setCorrectCount] = useState(0);
   const [mistakeCount, setMistakeCount] = useState(0);
+  const [totalRounds, setTotalRounds] = useState(0);
   const [currentNumber, setCurrentNumber] = useState(generateRandomNumber());
   const [isWrongAnswer, setIsWrongAnswer] = useState(false);
 
@@ -50,17 +51,19 @@ const Game = ({ highScore, updateHighScore, onGameOver }) => {
 
     if (answer === correctAnswer) {
       setCorrectCount((prev) => prev + 1);
-      nextQuestion();
     } else {
       setMistakeCount((prev) => prev + 1);
       setIsWrongAnswer(true);
       setTimeout(() => setIsWrongAnswer(false), 2000);
     }
+    nextQuestion();
   };
 
   const nextQuestion = () => {
+    setTotalRounds((prev) => prev + 1);
     if (questionNumber === 25) {
-      onGameOver();
+      updateHighScore({ ...highScore, score: correctCount, totalRounds, totalMistakes: mistakeCount });
+      onGameOver(false);
     } else {
       setQuestionNumber((prev) => prev + 1);
       setCurrentNumber(generateRandomNumber());
@@ -90,6 +93,7 @@ const Result = ({ highScore, onRestart, onResetHighScore }) => {
       <p style={styles.resultText}>
         Richtige Antworten: {highScore.score} <br />
         Fehler: {highScore.totalMistakes} <br />
+        Gespielte Runden: {highScore.totalRounds} <br />
         Highscore: {highScore.name || "—"} ({highScore.time === Infinity ? "—" : highScore.time.toFixed(2) + " Sekunden"})
       </p>
       <div style={styles.buttonContainer}>
@@ -102,14 +106,14 @@ const Result = ({ highScore, onRestart, onResetHighScore }) => {
 
 const styles = {
   container: { textAlign: "center", padding: "20px", fontFamily: "Arial, sans-serif" },
-  title: { fontSize: "24px", marginBottom: "20px" },
-  subTitle: { fontSize: "20px", marginBottom: "10px" },
-  question: { fontSize: "18px", marginBottom: "20px" },
-  gameContainer: { transition: "background-color 0.5s", padding: "20px", borderRadius: "8px" },
-  buttonContainer: { display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" },
-  button: { padding: "15px 20px", fontSize: "16px", backgroundColor: "#007BFF", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", minWidth: "100px" },
-  resetButton: { padding: "15px 20px", fontSize: "16px", backgroundColor: "#FF5733", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", minWidth: "100px" },
-  resultText: { fontSize: "16px", marginBottom: "20px" },
+  title: { fontSize: "22px", marginBottom: "20px" },
+  subTitle: { fontSize: "18px", marginBottom: "10px" },
+  question: { fontSize: "16px", marginBottom: "20px" },
+  gameContainer: { transition: "background-color 0.5s", padding: "15px", borderRadius: "8px" },
+  buttonContainer: { display: "flex", justifyContent: "center", gap: "8px", flexWrap: "wrap" },
+  button: { padding: "12px 15px", fontSize: "14px", backgroundColor: "#007BFF", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", minWidth: "90px" },
+  resetButton: { padding: "12px 15px", fontSize: "14px", backgroundColor: "#FF5733", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", minWidth: "90px" },
+  resultText: { fontSize: "14px", marginBottom: "20px" },
 };
 
 export default App;
